@@ -1,144 +1,112 @@
-# Экспорт данных из Яндекс Метрики
+# Экспорт данных Яндекс.Директ из Яндекс.Метрики
 
-Программа для выгрузки данных из Яндекс Метрики через Logs API.
+## Описание
 
-## Установка
+Программа для автоматической выгрузки данных о кликах из Яндекс.Директ через API Яндекс.Метрики.
 
-```bash
-pip install -r requirements.txt
-```
+## Возможности
 
-## Быстрый старт
-
-1. Создайте конфигурационный файл:
-
-```bash
-cp config.example.json config.json
-```
-
-2. Откройте `config.json` и укажите:
-   - **counter_id** - ID вашего счетчика Яндекс Метрики
-   - **date_from** / **date_to** - Период выгрузки данных (YYYY-MM-DD)
-
-Пример `config.json`:
-```json
-{
-  "token": "y0__xDf3anVBxj1oj0g2YDzmxbqmKoUgfZgE6CsOwrateq5Fbogyg",
-  "counter_id": "12345678",
-  "date_from": "2025-02-06",
-  "date_to": "2025-02-13"
-}
-```
-
-3. Запустите экспорт:
-
-```bash
-python run_export.py
-```
-
-## Альтернативный способ
-
-Можно использовать основной скрипт напрямую, отредактировав настройки в файле:
-
-```bash
-python yandex_metrika_export.py
-```
-
-## Экспорт больших периодов
-
-Если нужно выгрузить данные за длительный период (месяц и больше), используйте скрипт для выгрузки по частям:
-
-```bash
-python run_export_chunks.py
-```
-
-Скрипт:
-- Разобьет период на части по 7 дней
-- Выгрузит каждую часть отдельно
-- Автоматически объединит все части в один файл
-- Обработает ошибки и покажет статистику
-
-Программа:
-1. Создаст запрос на формирование логов
-2. Будет ожидать обработки запроса (обычно 5-15 минут)
-3. Скачает данные и сохранит их в TSV файл
-4. Очистит запрос на сервере
-
-## Выходные данные
-
-Данные сохраняются в файл формата TSV (Tab-Separated Values):
-- Название файла: `metrika_visits_YYYY-MM-DD_YYYY-MM-DD.tsv`
-- Можно открыть в Excel, Google Sheets или обработать в Python/Pandas
-
-## Анализ данных
-
-После получения данных можно воспользоваться скриптом для их анализа:
-
-```bash
-python analyze_data.py
-```
-
-Скрипт выведет:
-- Общую статистику по данным
-- Статистику по покупкам (выручка, средний чек)
-- Топ-10 продуктов
-- Статистику по звонкам
-- Статистику по Яндекс Директ
-- Экспортирует покупки в отдельный CSV файл
+- ✅ Автоматическая выгрузка данных Яндекс.Директ
+- ✅ Сохранение в отдельную папку `yandex_direct_exports/`
+- ✅ Автоматическая нумерация файлов при совпадении имен
+- ✅ Проверка доступности полей перед выгрузкой
+- ✅ Подробная статистика по результатам экспорта
 
 ## Выгружаемые поля
 
-### Покупки
-- purchaseID, purchaseDateTime, purchaseRevenue
-- purchaseTax, purchaseShipping, purchaseCoupon
-- purchaseCurrency, purchaseProductQuantity
+### Основная информация
+- `ym:s:visitID` - ID визита
+- `ym:s:dateTime` - Дата и время визита
+- `ym:s:clientID` - ID клиента
 
-### Продукты
-- productsPurchaseID, productsID, productsName
-- productsCategory, productsPrice
+### Данные Яндекс.Директ
+- `ym:s:DirectClickOrder` - Номер заказа в Директе
+- `ym:s:DirectClickBanner` - ID баннера
+- `ym:s:DirectClickOrderName` - Название заказа (кампании)
+- `ym:s:ClickBannerGroupName` - Название группы объявлений
+- `ym:s:DirectClickBannerName` - Название объявления
+- `ym:s:DirectPhraseOrCond` - Ключевая фраза или условие показа
+- `ym:s:DirectPlatformType` - Тип площадки (поиск/сети)
+- `ym:s:DirectBannerGroup` - ID группы объявлений
+- `ym:s:AdvEngine` - Рекламная система
 
-### Яндекс Директ
-- DirectClickOrder, DirectClickBanner
-- DirectClickOrderName, ClickBannerGroupName
-- DirectClickBannerName, DirectPhraseOrCond
-- DirectPlatformType, DirectBannerGroup
+## Использование
 
-### Показы продуктов
-- impressionsURL, impressionsDateTime
-- impressionsProductID, impressionsProductName
-- impressionsProductBrand, impressionsProductCategory (1-5 уровни)
-- impressionsProductVariant, impressionsProductPrice
-- impressionsProductCurrency, impressionsProductCoupon
+### 1. Настройте конфигурацию
 
-### Офлайн звонки
-- offlineCallTalkDuration, offlineCallMissed
-- offlineCallTag, offlineCallURL
-- offlineCallFirstTimeCaller
+Убедитесь, что файл `config.json` содержит корректные данные:
 
-### Дата и время
-- dateTime, clientTimeZone, dateTimeUTC
+```json
+{
+    "token": "your_oauth_token",
+    "counter_id": "178943",
+    "date_from": "2026-02-10",
+    "date_to": "2026-02-12"
+}
+```
 
-## Ограничения API
+### 2. Запустите экспорт
 
-- Максимальный период выгрузки: 1 год
-- Максимум 10 одновременных запросов
-- Данные доступны за последние 2 года
-- Лимит: 100 запросов в день
+```bash
+python3 export_yandex_direct.py
+```
 
-## Устранение неполадок
+### 3. Результаты
 
-### Ошибка 400 (Bad Request)
-- Проверьте правильность COUNTER_ID
-- Убедитесь, что все поля доступны для вашего счетчика
+Файлы сохраняются в папку `yandex_direct_exports/` с именами:
+```
+yandex_direct_2026-02-10_2026-02-12_20260213_143500.tsv
+yandex_direct_2026-02-10_2026-02-12_20260213_143500 (1).tsv
+yandex_direct_2026-02-10_2026-02-12_20260213_143500 (2).tsv
+```
 
-### Ошибка 401 (Unauthorized)
-- Проверьте токен доступа
-- Убедитесь, что токен имеет права на чтение данных счетчика
+## Структура папок
 
-### Ошибка 403 (Forbidden)
-- Проверьте права доступа к счетчику
-- Токен должен быть привязан к аккаунту с доступом к счетчику
+```
+try_3/
+├── export_yandex_direct.py          # Основной скрипт экспорта
+├── yandex_metrika_export.py         # Библиотека для работы с API
+├── config.json                       # Конфигурация
+└── yandex_direct_exports/           # Папка с результатами
+    ├── yandex_direct_2026-02-10_2026-02-12_20260213_143500.tsv
+    └── yandex_direct_2026-02-10_2026-02-12_20260213_143500 (1).tsv
+```
 
-## Дополнительная информация
+## Возможные проблемы
 
-Документация API: https://yandex.ru/dev/metrika/doc/api2/logs/intro.html
+### Поля недоступны
+
+**Проблема**: Программа сообщает, что поля Яндекс.Директ недоступны.
+
+**Причины**:
+1. Счетчик не получает данные от Яндекс.Директ
+2. Не настроена интеграция Директ → Метрика
+3. Нет данных за указанный период
+
+**Решение**:
+1. Проверьте настройки связи Директ и Метрики в интерфейсе
+2. Убедитесь, что есть клики из Директа за выбранный период
+3. Запустите `python3 list_available_fields.py` для просмотра доступных полей
+
+### Файлы с одинаковыми именами
+
+Программа автоматически добавляет (1), (2) и т.д. к имени файла, если файл с таким именем уже существует.
+
+## Дополнительные скрипты
+
+- `run_export.py` - Экспорт всех базовых данных визитов
+- `list_available_fields.py` - Просмотр всех доступных полей
+- `analyze_data.py` - Анализ выгруженных данных
+
+## Техническая поддержка
+
+Если возникли проблемы:
+1. Проверьте валидность OAuth токена
+2. Убедитесь, что counter_id указан правильно
+3. Проверьте период выгрузки (не более 1 года)
+4. Просмотрите лог ошибок в консоли
+
+## Документация API
+
+- [Logs API Яндекс.Метрики](https://yandex.ru/dev/metrika/doc/api2/logs/intro.html)
+- [Поля Яндекс.Директ](https://yandex.ru/dev/metrika/doc/api2/logs/fields.html#fields__direct)
